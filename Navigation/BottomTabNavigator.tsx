@@ -7,13 +7,14 @@ import MyPosts from '../pages/MyPosts';
 import NewPost from '../pages/NewPost';
 import Profile from '../pages/Profile';
 import {TouchableOpacity, View} from 'react-native';
+import DrawerNavigation from './DrawerNavigation';
 
 // screen type checking
 export type RootTabParamList = {
   MyPosts: undefined;
   New: undefined;
   Posts: undefined;
-  Profile: {Id: string; title: string};
+  DrawerNavigation: undefined;
   Details: {Id: string; title: string};
 };
 
@@ -21,6 +22,7 @@ const Tab = createBottomTabNavigator<RootTabParamList>();
 
 const FocusedButton = ({children, onPress, accessibilityState}: any) => {
   const selected = accessibilityState.selected;
+  
   return (
     <>
       {selected ? (
@@ -35,9 +37,9 @@ const FocusedButton = ({children, onPress, accessibilityState}: any) => {
             style={{
               width: 60,
               height: 60,
-              backgroundColor: 'red',
-              borderRadius: 50,
-              elevation:1
+              backgroundColor: '#000',
+              elevation:1,
+              borderRadius:30
             }}>
             {children}
           </View>
@@ -83,6 +85,7 @@ const BottomTabNavigator = () => {
           borderRadius: 15,
           height: 70,
           paddingHorizontal: 8,
+          zIndex:1
         },
       }}>
       <Tab.Screen
@@ -90,7 +93,6 @@ const BottomTabNavigator = () => {
         component={Posts}
         options={{
           unmountOnBlur: true,
-          tabBarLabel: 'Posts',
           tabBarIcon: ({color, size}) => (
             <MaterialCommunityIcons name="home" color={color} size={size} />
           ),
@@ -104,7 +106,6 @@ const BottomTabNavigator = () => {
         component={MyPosts}
         options={{
           unmountOnBlur: true,
-          tabBarLabel: 'My Posts',
           title: 'My Posts',
           tabBarIcon: ({color, size}) => (
             <MaterialCommunityIcons
@@ -122,7 +123,6 @@ const BottomTabNavigator = () => {
         name="New"
         component={NewPost}
         options={{
-          tabBarLabel: 'New Post',
           title: 'New Post',
           tabBarIcon: ({color, size, focused}) => (
             <MaterialCommunityIcons
@@ -138,10 +138,10 @@ const BottomTabNavigator = () => {
       />
 
       <Tab.Screen
-        name="Profile"
-        component={Profile}
+        name="DrawerNavigation"
+        component={DrawerNavigation}
         options={{
-          tabBarLabel: 'Profile',
+          headerShown:false,
           tabBarIcon: ({color, size}) => (
             <FontAwesome name="user" color={color} size={size} />
           ),

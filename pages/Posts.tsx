@@ -22,7 +22,7 @@ export default function Posts({navigation}: Props) {
         postId: doc.id,
         ...doc.data(),
       }));
-      console.log(fetchedPosts);
+  
       dispatch(postsAction(fetchedPosts));
     };
 
