@@ -5,7 +5,6 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Posts from '../pages/Posts';
 import MyPosts from '../pages/MyPosts';
 import NewPost from '../pages/NewPost';
-import Profile from '../pages/Profile';
 import {TouchableOpacity, View} from 'react-native';
 import DrawerNavigation from './DrawerNavigation';
 
