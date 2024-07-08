@@ -32,6 +32,11 @@ export default function MyPosts({navigation}: any) {
         flexDirection: 'row',
         gap: 6,
         marginVertical: 10,
+        elevation:2,
+        backgroundColor:"#fff",
+        padding:8,
+        borderRadius:8,
+        marginHorizontal:4
       }}>
       <View>
         {item.image && (

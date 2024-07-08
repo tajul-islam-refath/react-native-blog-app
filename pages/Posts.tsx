@@ -31,7 +31,7 @@ export default function Posts({navigation}: Props) {
 
   return (
     <SafeAreaView style={styles.warpare}>
-      <ScrollView>
+      <ScrollView >
         {posts.map((post: any, i: number) => (
           <View key={i} style={styles.postCard}>
             {post?.image && (
@@ -87,24 +87,24 @@ const styles = StyleSheet.create({
   },
   flex: {
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
-    flexDirection: 'row',
     gap: 10,
   },
   postCard: {
+    
     padding: 10,
     borderRadius: 4,
     width: '100%',
     marginVertical: 10,
-    // backgroundColor: '#000',
-
-    shadowColor: '#000000',
+    backgroundColor: '#fff',
+    shadowColor: 'gray',
     shadowOffset: {
-      width: 0,
-      height: 1,
+      width: 10,
+      height: 6,
     },
-    shadowOpacity: 0.15,
-    shadowRadius: 1.0,
-    elevation: 1,
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 6,
   },
 });
