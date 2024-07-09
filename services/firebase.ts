@@ -5,6 +5,7 @@ import {
   UserSignInCredintiles,
   UserSignUpCredintiles,
 } from '../models/UserCredential';
+import {storeData} from '../utils/storage';
 
 export const signInWithEmailPassword = async (data: UserSignInCredintiles) => {
   try {
@@ -12,15 +13,20 @@ export const signInWithEmailPassword = async (data: UserSignInCredintiles) => {
       data.email,
       data.password,
     );
+
     let userInfo: any = await firestorGet('users', userCredential.user.uid);
-    
+
+    const user = {
+      uid: userCredential.user.uid,
+      email: userInfo?._data.email,
+      name: userInfo?._data.name,
+      image: userInfo?._data.image,
+    };
+
+    await storeData('user', user);
+
     return {
-      user: {
-        uid: userCredential.user.uid,
-        email:userInfo?._data.email,
-        name:userInfo?._data.name,
-        image:userInfo?._data.image,
-      },
+      user,
       error: null,
     };
   } catch (error) {

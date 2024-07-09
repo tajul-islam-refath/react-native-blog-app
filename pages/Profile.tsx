@@ -5,15 +5,18 @@ import {Button} from '@rneui/base';
 import {logOutAction} from '../redux/authSlice';
 
 import {signOut} from '../services/firebase';
+import {removeData} from '../utils/storage';
 
 export default function Profile({navigation}: any) {
   const user = useSelector((state: any) => state?.auth?.user);
   const dispatch = useDispatch();
 
   const logOut = async () => {
-    await signOut();
-    navigation.replace('Login');
     dispatch(logOutAction());
+    await signOut();
+    await removeData('user');
+    navigation.replace('Login');
+  
   };
 
   return (

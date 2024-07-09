@@ -1,9 +1,6 @@
-import {Alert, StyleSheet, Text, View} from 'react-native';
-import React, {useState} from 'react';
-import {TouchableOpacity} from 'react-native-gesture-handler';
+import {StyleSheet, View} from 'react-native';
+import React from 'react';
 
-import TrackPlayer, {Event, State} from 'react-native-track-player';
-import {setUpPlayer} from '../services/PlaybackService ';
 import AudioPlay from '../components/AudioPlay';
 import AudioRecorderPlayerComponent from '../components/VoiceInput';
 

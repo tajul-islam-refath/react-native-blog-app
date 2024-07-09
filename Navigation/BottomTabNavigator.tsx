@@ -27,18 +27,18 @@ const FocusedButton = ({children, onPress, accessibilityState}: any) => {
       {selected ? (
         <TouchableOpacity
           style={{
-            top: -30,
-            alignItems: 'center',
+            // top: -30,
+            // alignItems: 'center',
           }}
           activeOpacity={1}
           onPress={onPress}>
           <View
             style={{
-              width: 60,
-              height: 60,
+              width: 50,
+              height: 50,
               backgroundColor: '#000',
               elevation:1,
-              borderRadius:30
+              borderRadius:25
             }}>
             {children}
           </View>
@@ -84,6 +84,7 @@ const BottomTabNavigator = () => {
           borderRadius: 15,
           height: 70,
           paddingHorizontal: 8,
+          paddingVertical:8,
           zIndex:1
         },
       }}>
