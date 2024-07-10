@@ -41,20 +41,18 @@ const AudioRecorderPlayerComponent = () => {
   audioRecorderPlayer.setSubscriptionDuration(0.1);
 
   const path = Platform.select({
-    ios: `file://${RNFS.DocumentDirectoryPath}/hello.m4a`,
+    ios: `file://${RNFS.CachesDirectoryPath}/hello.m4a`,
     android: `${dirs.CacheDir}/hello.mp3`,
   });
+
 
   const requestPermissions = async () => {
     if (Platform.OS === 'android') {
       try {
         const granted = await PermissionsAndroid.requestMultiple([
           PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
         ]);
 
-        console.log(granted);
         if (
           granted['android.permission.RECORD_AUDIO'] ===
           PermissionsAndroid.RESULTS.GRANTED
@@ -80,6 +78,8 @@ const AudioRecorderPlayerComponent = () => {
         granted[key] === PermissionsAndroid.RESULTS.DENIED ||
         granted[key] === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN,
     );
+
+    console.log(deniedPermissions);
 
     if (
       deniedPermissions.includes(
@@ -115,7 +115,6 @@ const AudioRecorderPlayerComponent = () => {
       AVNumberOfChannelsKeyIOS: 2,
       AVFormatIDKeyIOS: AVEncodingOption.aac,
     };
-    console.log('audioSet', audioSet);
 
     const uri = await audioRecorderPlayer.startRecorder(path, audioSet);
 
@@ -137,7 +136,6 @@ const AudioRecorderPlayerComponent = () => {
     setFilePath(result);
     console.log(`Recording stopped at: ${result}`);
     setFilePath(result);
-
   };
 
   const start = async () => {
@@ -159,14 +157,15 @@ const AudioRecorderPlayerComponent = () => {
         artist: 'Track Artist',
       });
 
+      TrackPlayer.seekTo(12.5);
       TrackPlayer.setVolume(1);
       // Start playing it
       TrackPlayer.play();
-     
 
       TrackPlayer.addEventListener(Event.PlaybackQueueEnded, async event => {
         if (event.position > 0) {
           setIsPlaying(false);
+          await TrackPlayer.reset();
           Alert.alert('Playback Finished', 'The audio has finished playing.');
         }
       });
@@ -251,7 +250,7 @@ const AudioRecorderPlayerComponent = () => {
             />
           </View>
         </TouchableOpacity>
-        <TouchableOpacity onPress={start}>
+        <TouchableOpacity onPress={onStartPlay}>
           <View
             style={{
               width: 60,

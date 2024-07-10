@@ -15,7 +15,7 @@ export const uploadImage = async (imageUri: string, uid: string) => {
 
 export const uploadToFirebase = async (path: string) => {
   const filename = path.split('/').pop();
-  const reference = storage().ref(filename);
+  const reference = storage().ref(`filename-${new Date()}-${filename}`);
 
   try {
     await reference.putFile(path);
