@@ -1,4 +1,3 @@
-
 import React, {useState} from 'react';
 import {
   View,
@@ -30,7 +29,7 @@ import {uploadToFirebase} from '../services/firebaseStorage';
 const audioRecorderPlayer = new AudioRecorderPlayer();
 const dirs = ReactNativeBlobUtil.fs.dirs;
 
-const AudioRecorderPlayerComponent = () => {
+const VoiceRecord = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState('');
@@ -42,9 +41,8 @@ const AudioRecorderPlayerComponent = () => {
 
   const path = Platform.select({
     ios: `file://${RNFS.CachesDirectoryPath}/hello.m4a`,
-    android: `${dirs.CacheDir}/hello.m4a`,
+    android: `${dirs.CacheDir}/hello.mp3`,
   });
-
 
   const requestPermissions = async () => {
     if (Platform.OS === 'android') {
@@ -305,4 +303,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AudioRecorderPlayerComponent;
+export default VoiceRecord;
