@@ -10,15 +10,40 @@ import {
   Alert,
   Linking,
 } from 'react-native';
-import AudioRecorderPlayer from 'react-native-audio-recorder-player';
+import AudioRecorderPlayer, {
+  AudioEncoderAndroidType,
+  AudioSet,
+  AudioSourceAndroidType,
+  AVEncoderAudioQualityIOSType,
+  AVEncodingOption,
+  AVModeIOSOption,
+} from 'react-native-audio-recorder-player';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 import {TouchableOpacity} from 'react-native-gesture-handler';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+
+import RNFS from 'react-native-fs';
+import {setUpPlayer} from '../services/PlaybackService ';
+import TrackPlayer, {Event, State} from 'react-native-track-player';
+import {uploadToFirebase} from '../services/firebaseStorage';
+
 const audioRecorderPlayer = new AudioRecorderPlayer();
+const dirs = ReactNativeBlobUtil.fs.dirs;
 
 const AudioRecorderPlayerComponent = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState('');
+  const [filePath, setFilePath] = useState('');
+  const [recordSecs, setRecordSecs] = useState(0);
+  const [recordTime, setRecordTime] = useState('');
+
+  audioRecorderPlayer.setSubscriptionDuration(0.1);
+
+  const path = Platform.select({
+    ios: `file://${RNFS.DocumentDirectoryPath}/hello.m4a`,
+    android: `${dirs.CacheDir}/hello.mp3`,
+  });
 
   const requestPermissions = async () => {
     if (Platform.OS === 'android') {
@@ -82,22 +107,88 @@ const AudioRecorderPlayerComponent = () => {
       return;
     }
 
+    const audioSet: AudioSet = {
+      AudioEncoderAndroid: AudioEncoderAndroidType.AAC,
+      AudioSourceAndroid: AudioSourceAndroidType.MIC,
+      AVModeIOS: AVModeIOSOption.measurement,
+      AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType.high,
+      AVNumberOfChannelsKeyIOS: 2,
+      AVFormatIDKeyIOS: AVEncodingOption.aac,
+    };
+    console.log('audioSet', audioSet);
+
+    const uri = await audioRecorderPlayer.startRecorder(path, audioSet);
+
+    audioRecorderPlayer.addRecordBackListener(e => {
+      setRecordSecs(e.currentPosition);
+      setRecordTime(audioRecorderPlayer.mmssss(Math.floor(e.currentPosition)));
+      console.log('Recording...', e);
+      return;
+    });
+    setFilePath(uri);
+    console.log(`Recording started at: ${uri}`);
     setIsRecording(true);
-    audioRecorderPlayer.startRecorder();
   };
 
   const onStopRecord = async () => {
-    setIsRecording(false);
     const result = await audioRecorderPlayer.stopRecorder();
     audioRecorderPlayer.removeRecordBackListener();
-    setRecordedAudio(result);
-    console.log(result);
+    setIsRecording(false);
+    setFilePath(result);
+    console.log(`Recording stopped at: ${result}`);
+    setFilePath(result);
+
+  };
+
+  const start = async () => {
+    setIsPlaying(true);
+    await setUpPlayer();
+
+    const currentState = await TrackPlayer.getPlaybackState();
+
+    if (currentState.state !== State.None) {
+      await TrackPlayer.reset();
+    }
+
+    let newPath = await uploadToFirebase(filePath);
+    if (newPath) {
+      await TrackPlayer.add({
+        id: 'trackId',
+        url: newPath,
+        title: 'Track Title',
+        artist: 'Track Artist',
+      });
+
+      TrackPlayer.setVolume(1);
+      // Start playing it
+      TrackPlayer.play();
+     
+
+      TrackPlayer.addEventListener(Event.PlaybackQueueEnded, async event => {
+        if (event.position > 0) {
+          setIsPlaying(false);
+          Alert.alert('Playback Finished', 'The audio has finished playing.');
+        }
+      });
+    }
+
+    // Add a track to the queue
   };
 
   const onStartPlay = async () => {
     setIsPlaying(true);
-    const msg = await audioRecorderPlayer.startPlayer(recordedAudio);
-    console.log(msg);
+    console.log(`onStartPlay at: ${filePath}`);
+    let newPath = await uploadToFirebase(filePath);
+    if (newPath) {
+      const msg = await audioRecorderPlayer.startPlayer(newPath);
+      const volume = await audioRecorderPlayer.setVolume(1.0);
+      console.log(`path: ${msg}`, `volume: ${volume}`);
+
+      audioRecorderPlayer.addPlayBackListener(e => {
+        console.log('audio playing -- ', e);
+        return;
+      });
+    }
   };
 
   const onStopPlay = async () => {
@@ -109,36 +200,100 @@ const AudioRecorderPlayerComponent = () => {
   return (
     <View
       style={{
+        flex: 1,
         display: 'flex',
         alignItems: 'center',
       }}>
-      <TouchableOpacity onPress={isRecording ? onStopRecord : onStartRecord}>
-        <View
-          style={{
-            width: 60,
-            height: 60,
-            borderRadius: 30,
-            backgroundColor: '#000',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-          <FontAwesome
-            name="microphone"
+      <View
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 8,
+        }}>
+        <TouchableOpacity onPress={onStartRecord}>
+          <View
             style={{
-              fontSize: 18,
-              color: '#fff',
-            }}
-          />
-        </View>
-      </TouchableOpacity>
-      {recordedAudio ? (
-        <Button
-          title={isPlaying ? 'Stop Playing' : 'Start Playing'}
-          onPress={isPlaying ? onStopPlay : onStartPlay}
-        />
-      ) : null}
-      {recordedAudio && <Text>Recorded Audio: {recordedAudio}</Text>}
+              width: 60,
+              height: 60,
+              borderRadius: 30,
+              backgroundColor: '#000',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <FontAwesome
+              name="microphone"
+              style={{
+                fontSize: 18,
+                color: '#fff',
+              }}
+            />
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={onStopRecord}>
+          <View
+            style={{
+              width: 60,
+              height: 60,
+              borderRadius: 30,
+              backgroundColor: '#000',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <FontAwesome
+              name="stop"
+              style={{
+                fontSize: 18,
+                color: '#fff',
+              }}
+            />
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={start}>
+          <View
+            style={{
+              width: 60,
+              height: 60,
+              borderRadius: 30,
+              backgroundColor: '#000',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <FontAwesome
+              name="play"
+              style={{
+                fontSize: 18,
+                color: '#fff',
+              }}
+            />
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={onStopPlay}>
+          <View
+            style={{
+              width: 60,
+              height: 60,
+              borderRadius: 30,
+              backgroundColor: '#000',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <FontAwesome
+              name="pause"
+              style={{
+                fontSize: 18,
+                color: '#fff',
+              }}
+            />
+          </View>
+        </TouchableOpacity>
+      </View>
+
+      {recordTime && <Text>Recorded Audio: {recordTime}</Text>}
     </View>
   );
 };

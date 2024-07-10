@@ -50,8 +50,7 @@ const Login = ({navigation}: Props) => {
       Alert.alert('Sign in faield!');
       return;
     }
-
-    console.log(user);
+    
     dispatch(
       signInAction({
         uid: user?.user.id,

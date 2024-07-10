@@ -12,3 +12,18 @@ export const uploadImage = async (imageUri: string, uid: string) => {
   }
   return imageUrl;
 };
+
+export const uploadToFirebase = async (path: string) => {
+  const filename = path.split('/').pop();
+  const reference = storage().ref(filename);
+
+  try {
+    await reference.putFile(path);
+    const url = await reference.getDownloadURL();
+    console.log('File uploaded successfully: ', url);
+    return url;
+  } catch (error) {
+    console.error('Upload failed: ', error);
+    return null;
+  }
+};

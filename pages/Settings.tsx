@@ -19,7 +19,7 @@ export default function Settings() {
           flexDirection: 'row',
           gap: 20,
         }}>
-        <AudioPlay />
+        {/* <AudioPlay /> */}
         <AudioRecorderPlayerComponent />
       </View>
     </View>
