@@ -37,7 +37,12 @@ export default function Details({route}: Props) {
             source={{
               uri: post?.image,
             }}
-            style={{width: '100%', height: 200, borderRadius: 4}}
+            style={{
+              width: '100%',
+              height: 200,
+              borderRadius: 4,
+              objectFit: 'cover',
+            }}
           />
         )}
         <Text

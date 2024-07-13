@@ -11,7 +11,7 @@ import {
 import React from 'react';
 
 import {Formik} from 'formik';
-import {launchCamera} from 'react-native-image-picker';
+import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import {RootTabParamList} from '../Navigation/BottomTabNavigator';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {firestoreCollectionAdd} from '../services/firebaseFireStore';
@@ -47,8 +47,6 @@ export default function NewPost({navigation}: Props) {
     }
   };
 
-
-
   return (
     <SafeAreaView style={styles.warpare}>
       <ScrollView keyboardShouldPersistTaps="handled">
@@ -63,6 +61,7 @@ export default function NewPost({navigation}: Props) {
                   value={values.title}
                   onChangeText={handleChange('title')}
                   placeholder="Enter title"
+                  placeholderTextColor="#000"
                 />
               </View>
 
@@ -76,6 +75,7 @@ export default function NewPost({navigation}: Props) {
                   placeholder="Write something"
                   multiline={true}
                   numberOfLines={4}
+                  placeholderTextColor="#000"
                 />
               </View>
 
@@ -85,13 +85,15 @@ export default function NewPost({navigation}: Props) {
                   id="image"
                   style={styles.input}
                   onPress={async () => {
-                    await launchCamera({mediaType: 'photo'}, response => {
+                    await launchImageLibrary({mediaType: 'photo'}, response => {
                       if (response.assets && response.assets.length > 0) {
                         setFieldValue('image', response.assets[0].uri);
                       }
                     });
                   }}>
-                  <Text style={[styles.baseButtonText]}>Select an image</Text>
+                  <Text style={[styles.baseButtonText, {color: '#000'}]}>
+                    Select an image
+                  </Text>
                 </TouchableOpacity>
               </View>
 
@@ -130,11 +132,11 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 14,
-    color: 'ccc',
+    color: '#000',
   },
   input: {
     fontSize: 14,
-    color: 'ccc',
+    color: '#000',
     borderColor: '#ccc',
     borderStyle: 'solid',
     borderWidth: 1,

@@ -1,4 +1,3 @@
-
 import React, {useState} from 'react';
 import {
   View,
@@ -37,6 +36,7 @@ const AudioRecorderPlayerComponent = () => {
   const [filePath, setFilePath] = useState('');
   const [recordSecs, setRecordSecs] = useState(0);
   const [recordTime, setRecordTime] = useState('');
+  const [playingSec, setPlayingSec] = useState('');
 
   audioRecorderPlayer.setSubscriptionDuration(0.1);
 
@@ -44,7 +44,6 @@ const AudioRecorderPlayerComponent = () => {
     ios: `file://${RNFS.CachesDirectoryPath}/hello.m4a`,
     android: `${dirs.CacheDir}/hello.m4a`,
   });
-
 
   const requestPermissions = async () => {
     if (Platform.OS === 'android') {
@@ -115,9 +114,8 @@ const AudioRecorderPlayerComponent = () => {
       AVNumberOfChannelsKeyIOS: 2,
       AVFormatIDKeyIOS: AVEncodingOption.aac,
     };
-
+    setIsRecording(true);
     const uri = await audioRecorderPlayer.startRecorder(path, audioSet);
-
     audioRecorderPlayer.addRecordBackListener(e => {
       setRecordSecs(e.currentPosition);
       setRecordTime(audioRecorderPlayer.mmssss(Math.floor(e.currentPosition)));
@@ -126,7 +124,6 @@ const AudioRecorderPlayerComponent = () => {
     });
     setFilePath(uri);
     console.log(`Recording started at: ${uri}`);
-    setIsRecording(true);
   };
 
   const onStopRecord = async () => {
@@ -176,15 +173,21 @@ const AudioRecorderPlayerComponent = () => {
 
   const onStartPlay = async () => {
     setIsPlaying(true);
-    console.log(`onStartPlay at: ${filePath}`);
-    let newPath = await uploadToFirebase(filePath);
-    if (newPath) {
-      const msg = await audioRecorderPlayer.startPlayer(newPath);
+    // console.log(`onStartPlay at: ${filePath}`);
+    // let newPath = await uploadToFirebase(filePath);
+    if (filePath) {
+      const msg = await audioRecorderPlayer.startPlayer(filePath);
       const volume = await audioRecorderPlayer.setVolume(1.0);
-      console.log(`path: ${msg}`, `volume: ${volume}`);
 
-      audioRecorderPlayer.addPlayBackListener(e => {
+      audioRecorderPlayer.addPlayBackListener(async e => {
+        if (e?.isFinished) {
+          await onStopPlay();
+          return;
+        }
         console.log('audio playing -- ', e);
+        setPlayingSec(
+          audioRecorderPlayer.mmssss(Math.floor(e.currentPosition)),
+        );
         return;
       });
     }
@@ -193,7 +196,39 @@ const AudioRecorderPlayerComponent = () => {
   const onStopPlay = async () => {
     setIsPlaying(false);
     const msg = await audioRecorderPlayer.stopPlayer();
-    console.log(msg);
+    Alert.alert('Audio is finished');
+  };
+
+  const requestToPermissions = async () => {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+        {
+          title: 'Music',
+          message: 'App needs access to your Files... ',
+          buttonNeutral: 'Ask Me Later',
+          buttonNegative: 'Cancel',
+          buttonPositive: 'OK',
+        },
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        console.log('startDownload...');
+        downloadRecording();
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const downloadRecording = async () => {
+    const destPath = `${RNFS.DownloadDirectoryPath}/audio_record.3gp`;
+    RNFS.copyFile(filePath, destPath)
+      .then(() => {
+        alert(`Audio file downloaded to: ${destPath}`);
+      })
+      .catch(err => {
+        console.error(err);
+      });
   };
 
   return (
@@ -203,96 +238,149 @@ const AudioRecorderPlayerComponent = () => {
         display: 'flex',
         alignItems: 'center',
       }}>
+      {recordTime && (
+        <Text style={{color: '#000', marginBottom: 20}}>
+          Recording Audio: {recordTime}
+        </Text>
+      )}
       <View
         style={{
           display: 'flex',
-          flexDirection: 'row',
           alignItems: 'center',
-          gap: 8,
+          gap: 16,
         }}>
-        <TouchableOpacity onPress={onStartRecord}>
-          <View
-            style={{
-              width: 60,
-              height: 60,
-              borderRadius: 30,
-              backgroundColor: '#000',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-            <FontAwesome
-              name="microphone"
-              style={{
-                fontSize: 18,
-                color: '#fff',
-              }}
-            />
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onStopRecord}>
-          <View
-            style={{
-              width: 60,
-              height: 60,
-              borderRadius: 30,
-              backgroundColor: '#000',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-            <FontAwesome
-              name="stop"
-              style={{
-                fontSize: 18,
-                color: '#fff',
-              }}
-            />
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onStartPlay}>
-          <View
-            style={{
-              width: 60,
-              height: 60,
-              borderRadius: 30,
-              backgroundColor: '#000',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-            <FontAwesome
-              name="play"
-              style={{
-                fontSize: 18,
-                color: '#fff',
-              }}
-            />
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onStopPlay}>
-          <View
-            style={{
-              width: 60,
-              height: 60,
-              borderRadius: 30,
-              backgroundColor: '#000',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-            <FontAwesome
-              name="pause"
-              style={{
-                fontSize: 18,
-                color: '#fff',
-              }}
-            />
-          </View>
-        </TouchableOpacity>
+        <View
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            flexDirection: 'row',
+            gap: 8,
+          }}>
+          {isRecording ? (
+            <TouchableOpacity onPress={onStopRecord}>
+              <View
+                style={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: 30,
+                  backgroundColor: '#000',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                <FontAwesome
+                  name="stop"
+                  style={{
+                    fontSize: 18,
+                    color: '#fff',
+                  }}
+                />
+              </View>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={onStartRecord}>
+              <View
+                style={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: 30,
+                  backgroundColor: '#000',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                <FontAwesome
+                  name="microphone"
+                  style={{
+                    fontSize: 18,
+                    color: '#fff',
+                  }}
+                />
+              </View>
+            </TouchableOpacity>
+          )}
+        </View>
+        <View
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            flexDirection: 'row',
+            gap: 8,
+          }}>
+          {isPlaying ? (
+            <TouchableOpacity onPress={onStopPlay}>
+              <View
+                style={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: 30,
+                  backgroundColor: '#000',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                <FontAwesome
+                  name="pause"
+                  style={{
+                    fontSize: 18,
+                    color: '#fff',
+                  }}
+                />
+              </View>
+            </TouchableOpacity>
+          ) : (
+            <>
+              <TouchableOpacity onPress={onStartPlay}>
+                <View
+                  style={{
+                    width: 60,
+                    height: 60,
+                    borderRadius: 30,
+                    backgroundColor: '#000',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                  <FontAwesome
+                    name="play"
+                    style={{
+                      fontSize: 18,
+                      color: '#fff',
+                    }}
+                  />
+                </View>
+              </TouchableOpacity>
+              {filePath && (
+                <TouchableOpacity onPress={requestToPermissions}>
+                  <View
+                    style={{
+                      width: 60,
+                      height: 60,
+                      borderRadius: 30,
+                      backgroundColor: '#000',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}>
+                    <FontAwesome
+                      name="download"
+                      style={{
+                        fontSize: 18,
+                        color: '#fff',
+                      }}
+                    />
+                  </View>
+                </TouchableOpacity>
+              )}
+            </>
+          )}
+        </View>
       </View>
-
-      {recordTime && <Text>Recorded Audio: {recordTime}</Text>}
+      {isPlaying && (
+        <Text style={{color: '#000', marginTop: 20}}>
+          Playing: {playingSec}
+        </Text>
+      )}
     </View>
   );
 };

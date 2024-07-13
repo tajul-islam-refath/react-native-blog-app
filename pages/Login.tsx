@@ -46,11 +46,11 @@ const Login = ({navigation}: Props) => {
   const signInUsingGoogle = async () => {
     const {error, user} = await googleSignIn();
     if (error) {
-      console.log(error)
+      console.log(error);
       Alert.alert('Sign in faield!');
       return;
     }
-    
+
     dispatch(
       signInAction({
         uid: user?.user.id,
@@ -81,6 +81,7 @@ const Login = ({navigation}: Props) => {
                   onChangeText={handleChange('email')}
                   placeholder="example@gmail.com"
                   keyboardType="email-address"
+                  placeholderTextColor="#000"
                 />
                 {touched.email && errors.email && (
                   <Text style={styles.inputLabelError}>{errors.email}</Text>
@@ -95,6 +96,7 @@ const Login = ({navigation}: Props) => {
                   onChangeText={handleChange('password')}
                   placeholder="********"
                   secureTextEntry={hidePass ? true : false}
+                  placeholderTextColor="#000"
                 />
                 {touched.password && errors.password && (
                   <Text style={styles.inputLabelError}>{errors.password}</Text>
@@ -169,7 +171,7 @@ const styles = StyleSheet.create({
   },
   input: {
     fontSize: 14,
-    color: 'ccc',
+    color: '#000',
     borderColor: '#ccc',
     borderStyle: 'solid',
     borderWidth: 1,
