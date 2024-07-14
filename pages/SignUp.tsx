@@ -1,14 +1,13 @@
 import {
   Alert,
-  Platform,
+  Dimensions,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
+import React from 'react';
 import {Formik} from 'formik';
 import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 
@@ -16,23 +15,22 @@ import {signInSchema} from '../validations/formSchema';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {RootStackParamList} from '../App';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {useDispatch} from 'react-redux';
+
 import {signUpWithEmailPassword} from '../services/firebase';
-import { UserSignUpCredintiles } from '../models/UserCredential';
+import {UserSignUpCredintiles} from '../models/UserCredential';
+import InputField from '../components/UI/InputField';
+import CustomButton from '../components/UI/Button';
+import SeparatorWithText from '../components/UI/SeparatorWithText';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SignUp'>;
 
-const Separator = () => <View style={styles.separator} />;
 const SignUp = ({navigation}: Props) => {
-  const [hidePass, setHidePass] = useState(true);
   const formData: UserSignUpCredintiles = {
     email: '',
     password: '',
     name: '',
     image: '',
   };
-
-
 
   const onSubmit = async (values: UserSignUpCredintiles) => {
     let response = await signUpWithEmailPassword(values);
@@ -62,62 +60,45 @@ const SignUp = ({navigation}: Props) => {
             setFieldValue,
           }) => (
             <>
-              <View style={styles.inputWarpare}>
-                <Text style={styles.inputLabel}>Enter Name*</Text>
-                <TextInput
-                  id="name"
-                  style={styles.input}
-                  value={values.name}
-                  onChangeText={handleChange('name')}
-                  placeholder="Enter your name"
-                />
-                {touched.name && errors.name && (
-                  <Text style={styles.inputLabelError}>{errors.name}</Text>
-                )}
-              </View>
-              <View style={styles.inputWarpare}>
-                <Text style={styles.inputLabel}>Email*</Text>
-                <TextInput
-                  id="email"
-                  style={styles.input}
-                  value={values.email}
-                  onChangeText={handleChange('email')}
-                  placeholder="example@gmail.com"
-                  keyboardType="email-address"
-                />
-                {touched.email && errors.email && (
-                  <Text style={styles.inputLabelError}>{errors.email}</Text>
-                )}
-              </View>
-              <View style={styles.inputWarpare}>
-                <Text style={styles.inputLabel}>Password*</Text>
-                <TextInput
-                  id="password"
-                  style={styles.input}
-                  value={values.password}
-                  onChangeText={handleChange('password')}
-                  placeholder="********"
-                  secureTextEntry={hidePass ? true : false}
-                />
-                {touched.password && errors.password && (
-                  <Text style={styles.inputLabelError}>{errors.password}</Text>
-                )}
-              </View>
+              <InputField
+                label="Name*"
+                value={values.name}
+                onChangeText={handleChange('name')}
+                placeholder="Enter your name"
+                error={touched.name && errors.name ? errors.name : null}
+              />
+              <InputField
+                label="Email*"
+                value={values.email}
+                onChangeText={handleChange('email')}
+                placeholder="example@gmail.com"
+                error={touched.email && errors.email ? errors.email : null}
+              />
+              <InputField
+                label="password*"
+                value={values.password}
+                onChangeText={handleChange('password')}
+                placeholder="********"
+                error={
+                  touched.password && errors.password ? errors.password : null
+                }
+                secureTextEntry={true}
+              />
+
               <View style={styles.inputWarpare}>
                 <Text style={styles.inputLabel}>Profile Image*</Text>
                 <TouchableOpacity
                   id="image"
                   style={styles.input}
-                  onPress={ async () => {
-                    await launchCamera({mediaType: 'photo'}, (response) => {
-                      console.log(response)
+                  onPress={async () => {
+                    await launchImageLibrary({mediaType: 'photo'}, response => {
+                      console.log(response);
                       if (response.assets && response.assets.length > 0) {
                         setFieldValue('image', response.assets[0].uri);
                       }
                     });
                   }}>
-                  <Text
-                    style={[ styles.baseButtonText]}>
+                  <Text style={[styles.baseButtonText, {color: '#000'}]}>
                     Select an image
                   </Text>
                 </TouchableOpacity>
@@ -126,34 +107,26 @@ const SignUp = ({navigation}: Props) => {
                   <Text style={styles.inputLabelError}>{errors.image}</Text>
                 )}
               </View>
-              <TouchableOpacity
-                style={[styles.signUpButton, styles.baseButton]}
-                onPress={() => handleSubmit()}>
-                <Text style={[styles.signUpButtonText, styles.baseButtonText]}>
-                  Sign Up
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.createAccountButton, styles.baseButton]}
-                onPress={() => navigation.navigate('Login')}>
-                <Text style={[styles.createButtonText, styles.baseButtonText]}>
-                  Log In
-                </Text>
-              </TouchableOpacity>
-              <View style={{position: 'relative'}}>
-                <Separator />
-                <Text
-                  style={{
-                    backgroundColor: '#fff',
-                    alignSelf: 'flex-start',
-                    padding: 4,
-                    position: 'absolute',
-                    top: 0,
-                    left: 180,
-                  }}>
-                  OR
-                </Text>
-              </View>
+
+              <CustomButton
+                name="Sign Up"
+                handleSubmit={() => handleSubmit()}
+                btnStyle={{
+                  backgroundColor: '#000',
+                }}
+                textColor="#fff"
+              />
+
+              <CustomButton
+                name=" Log In"
+                handleSubmit={() => navigation.navigate('Login')}
+                btnStyle={{
+                  backgroundColor: '#D7DBDD',
+                  marginVertical: 6,
+                }}
+                textColor="#000"
+              />
+              <SeparatorWithText />
               <TouchableOpacity
                 style={[styles.signUpButton, styles.baseButton]}>
                 <Text style={[styles.signUpButtonText, styles.baseButtonText]}>
@@ -190,11 +163,11 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 14,
-    color: 'ccc',
+    color: '#000',
   },
   input: {
     fontSize: 14,
-    color: 'ccc',
+    color: '#000',
     borderColor: '#ccc',
     borderStyle: 'solid',
     borderWidth: 1,
@@ -229,11 +202,7 @@ const styles = StyleSheet.create({
   createButtonText: {
     color: '#000',
   },
-  separator: {
-    marginVertical: 15,
-    borderBottomColor: '#737373',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
+
   inputLabelError: {
     fontSize: 14,
     color: 'red',

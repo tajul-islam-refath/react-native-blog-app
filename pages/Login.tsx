@@ -3,7 +3,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -18,12 +17,14 @@ import {signInWithEmailPassword} from '../services/firebase';
 import {useDispatch} from 'react-redux';
 import {signInAction} from '../redux/authSlice';
 import {googleSignIn} from '../services/google';
+import InputField from '../components/UI/InputField';
+import CustomButton from '../components/UI/Button';
+import SeparatorWithText from '../components/UI/SeparatorWithText';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
 const Separator = () => <View style={styles.separator} />;
 const Login = ({navigation}: Props) => {
-  const [hidePass, setHidePass] = useState(true);
   const formData: UserSignInCredintiles = {
     email: '',
     password: '',
@@ -32,6 +33,7 @@ const Login = ({navigation}: Props) => {
   const dispatch = useDispatch();
 
   const onSubmit = async (values: UserSignInCredintiles) => {
+    console.log(values);
     const response = await signInWithEmailPassword(values);
     if (response.error) {
       Alert.alert('User signin failed');
@@ -72,64 +74,46 @@ const Login = ({navigation}: Props) => {
           onSubmit={onSubmit}>
           {({values, errors, touched, handleSubmit, handleChange}) => (
             <>
-              <View style={styles.inputWarpare}>
-                <Text style={styles.inputLabel}>Email*</Text>
-                <TextInput
-                  id="email"
-                  style={styles.input}
-                  value={values.email}
-                  onChangeText={handleChange('email')}
-                  placeholder="example@gmail.com"
-                  keyboardType="email-address"
-                  placeholderTextColor="#000"
-                />
-                {touched.email && errors.email && (
-                  <Text style={styles.inputLabelError}>{errors.email}</Text>
-                )}
-              </View>
-              <View style={styles.inputWarpare}>
-                <Text style={styles.inputLabel}>Password*</Text>
-                <TextInput
-                  id="password"
-                  style={styles.input}
-                  value={values.password}
-                  onChangeText={handleChange('password')}
-                  placeholder="********"
-                  secureTextEntry={hidePass ? true : false}
-                  placeholderTextColor="#000"
-                />
-                {touched.password && errors.password && (
-                  <Text style={styles.inputLabelError}>{errors.password}</Text>
-                )}
-              </View>
-              <TouchableOpacity
-                style={[styles.signUpButton, styles.baseButton]}
-                onPress={() => handleSubmit()}>
-                <Text style={[styles.signUpButtonText, styles.baseButtonText]}>
-                  Log In
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.createAccountButton, styles.baseButton]}
-                onPress={() => navigation.navigate('SignUp')}>
-                <Text style={[styles.createButtonText, styles.baseButtonText]}>
-                  Create account ?
-                </Text>
-              </TouchableOpacity>
-              <View style={{position: 'relative'}}>
-                <Separator />
-                <Text
-                  style={{
-                    backgroundColor: '#fff',
-                    alignSelf: 'flex-start',
-                    padding: 4,
-                    position: 'absolute',
-                    top: 0,
-                    left: 180,
-                  }}>
-                  OR
-                </Text>
-              </View>
+              <InputField
+                label="Email*"
+                value={values.email}
+                onChangeText={handleChange('email')}
+                placeholder="example@gmail.com"
+                error={touched.email && errors.email ? errors.email : null}
+              />
+
+              <InputField
+                label="password*"
+                value={values.password}
+                onChangeText={handleChange('password')}
+                placeholder="********"
+                error={
+                  touched.password && errors.password ? errors.password : null
+                }
+                secureTextEntry={true}
+              />
+
+              <CustomButton
+                name="Log In"
+                handleSubmit={() => handleSubmit()}
+                btnStyle={{
+                  backgroundColor: '#000',
+                }}
+                textColor="#fff"
+              />
+
+              <CustomButton
+                name="Create account ?"
+                handleSubmit={() => navigation.navigate('SignUp')}
+                btnStyle={{
+                  backgroundColor: '#D7DBDD',
+                  marginVertical: 6,
+                }}
+                textColor="#000"
+              />
+
+              <SeparatorWithText />
+
               <TouchableOpacity
                 style={[styles.signUpButton, styles.baseButton]}
                 onPress={() => signInUsingGoogle()}>
@@ -167,7 +151,7 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 14,
-    color: 'ccc',
+    color: '#000',
   },
   input: {
     fontSize: 14,
